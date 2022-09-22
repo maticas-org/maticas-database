@@ -1,6 +1,6 @@
-from sqlalchemy                 import create_engine
-from dotenv                     import load_dotenv
-from models                     import *
+from sqlalchemy import create_engine
+from dotenv     import load_dotenv
+from models     import *
 import os
 
 load_dotenv()

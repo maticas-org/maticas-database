@@ -2,15 +2,26 @@ from sqlalchemy import MetaData, Table, Column, DateTime, Time, Float, Integer, 
 from datetime import datetime
 import pandas as pd
 
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm      import relationship
+from sqlalchemy.dialects        import postgresql
+from sqlalchemy.orm             import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 class User(Base):
 
     """
+    Table Structure:
+
+        +---------+-----------------------+-----------------+------------------+------------------+------------------+---------------------+
+        |    id   |   time                |    username     |       email      |     user_db      |     password     |   current api key   |
+        +---------+-----------------------+-----------------+------------------+------------------+------------------+---------------------+
+        |         |                       |                 |                  |                  |                  |                     |
+        |   int   | "YYYY/MM/DD %H:%M:%S" |    "username"   |   "xxx@zzz.aaa"  |     String       |     sha512       |       sha512        |
+        +---------+-----------------------+-----------------+------------------+------------------+------------------+---------------------+
+
+
         Users table, this table contains the users of the application.
         the user's password is hashed.
 
@@ -87,7 +98,19 @@ class Actuator(Base):
         return f"<Actuator {self.actuator_name}>"
 
 
+
 class AmbientalVaraible(Base):
+
+    """
+    Table Structure:
+
+        +-----------------------+--------------------------------+
+        |   time                |       varname     |   value    |
+        +-----------------------+--------------------------------+
+        |                       |                   |            |
+        | "YYYY/MM/DD %H:%M:%S" |       String      |   Float    |
+        +-----------------------+--------------------------------+
+    """
 
     __tablename__ = 'ambiental_variables'
 
