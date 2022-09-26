@@ -1,3 +1,6 @@
+from sqlalchemy import MetaData, Table, Column, DateTime, Float, String, insert, select, delete, update 
+from datetime import datetime
+
 import pandas as pd
 from sqlalchemy.dialects import postgresql
 
@@ -8,6 +11,7 @@ from subprocess import run
 
 email_regex     = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 username_regex  = r'\b^[A-Za-z0-9_-]*$'
+numbers_regex   = r'\b\d+$'
 
 
 """
@@ -38,9 +42,12 @@ class UsersWrapper():
         Inserts a user into the table.
 
             INPUT:
-
+                    - username: User name to insert.
+                    - email:    User email to insert.
+                    - password: User password to insert.
 
             OUTPUT:
+                    - A dictionary with the result of the insertion.
         """
 
         # deletes white spaces on the sides of the strings
@@ -68,7 +75,7 @@ class UsersWrapper():
         # Inserts the value into the table.
         insert_statement = insert(self.table).values(username = username, 
                                                      email    = email, 
-                                                     user_db  = f'{username}_db'
+                                                     user_db  = f'{username}_db',
                                                      password = password, 
                                                      api_key  = api_key)
 
@@ -205,7 +212,7 @@ class UsersWrapper():
         numbers  = re.findall(numbers_regex, mem_data)
         number   = "".join(numbers)
         
-        string = "".join([uppercase_user, uppercase_pass, number])
+        string = "".join([uppercase_user, uppercase_pass, number, username])
         hashhh    = hashlib.sha512( string.encode("utf-8") ).hexdigest()
 
         return hashhh

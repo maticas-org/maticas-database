@@ -20,7 +20,7 @@ import pandas as pd
 """
 
 
-class AmbientalVaraibleWrapper():
+class AmbientalVariableWrapper():
 
 
     def __init__(self, table: Table, engine):

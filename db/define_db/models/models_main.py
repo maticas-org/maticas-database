@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine
-from dotenv     import load_dotenv
-from models     import *
+from sqlalchemy             import create_engine
+from dotenv                 import load_dotenv
 import os
+
+from usrs_model             import *
+from usrs_database_models   import *
 
 load_dotenv()
 
