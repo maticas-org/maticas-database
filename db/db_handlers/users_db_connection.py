@@ -9,12 +9,10 @@ from sys import path
 from os.path import abspath, dirname
 
 # the directory where the database is defined to the path
-current_file_directory = dirname(abspath(__file__))
-database_definition_directory = current_file_directory + "/define_db"
-path.append( database_definition_directory )
+root_dir = dirname(dirname(abspath(__file__)))
+path.append( root_dir + "/define_db" )
 
 # imports database tables definitions 
-from users_table        import *
 from tables_utilities   import *
 
 
@@ -55,11 +53,11 @@ class UsrDbConnection():
         """
         """
 
-        self.users_table = load_users_table(self.engine, self.metadata)
+        tables = load_users_tables(self.engine, self.metadata)
 
-        if self.users_table == None:
-            print("As no user table was found, one will be created...")
-            self.users_table = Users(self.engine)
+        self.users_table  = tables['users']
+        self.mics_table   = tables['microcontrollers']
+        self.topics_table = tables['topics']
 
 
         print("Done starting the users database.")

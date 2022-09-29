@@ -11,6 +11,7 @@ Base = declarative_base()
 
 class User(Base):
 
+    print("User class created.")
     """
     Table Structure:
 
@@ -30,7 +31,7 @@ class User(Base):
 
     __tablename__ = 'users'
 
-    id       = Column(Integer,          autoincrement = "auto",         primary_key = True)
+    id_      = Column(Integer,          autoincrement = "auto",         primary_key = True)
     time     = Column(DateTime,         default     = datetime.utcnow,  nullable = False)
     username = Column(String(128),      unique      = True,             nullable = False)
     email    = Column(String(128),      unique      = True,             nullable = False)
@@ -51,13 +52,25 @@ class User(Base):
 class Microcontrollers(Base):
     
     """
+    Table Structure:
+
+        +-----------+-----------------------+------------------------+----------------------+
+        |   usr_id  |   time                |        name            |      mac_address     |
+        +-----------+-----------------------+------------------------+----------------------+
+        |           |                       |                        |                      |
+        |   int     | "YYYY/MM/DD %H:%M:%S" | "microcontroller name" |   "xxx@zzz.aaa"      |
+        +-----------+-----------------------+------------------------+----------------------+
+
+
+
         Microcontrollers table, this table contains the microcontrollers that the user has registered.
     """
 
+    print("Microcontrollers class created.")
     __tablename__ = 'microcontrollers'
 
-    usr_id      = Column(Integer,       ForeignKey('users.id'),     primary_key = True)
-    time        = Column(DateTime,      nullable = False,           default     = datetime.utcnow)
+    usr_id      = Column(Integer,       ForeignKey('users.id_'),     primary_key = True)
+    time        = Column(DateTime,      nullable = False,            default     = datetime.utcnow)
     name        = Column(String(128),   nullable = True)
     mac_address = Column(String(20),    unique = True,              primary_key = True )
 
@@ -72,10 +85,11 @@ class MQTTTopics(Base):
     """
         MQTTTopics table, this table contains the topics that the user has registered.
     """
+    print("MQTTTopics class created.\n")
     __tablename__ = 'mqtt_topics'
 
-    usr_id  = Column(Integer,       ForeignKey('users.id'), primary_key = True)
-    topic   = Column(String(128),   unique = True,          primary_key = True)
+    usr_id  = Column(Integer,       ForeignKey('users.id_'), primary_key = True)
+    topic   = Column(String(128),   unique = True,           primary_key = True)
 
     def __repr__(self):
         return f"<Microcontroller {self.topic}>"

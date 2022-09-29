@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData, Table, Column, DateTime, Float, String, insert, select, delete, update 
+from sqlalchemy import MetaData, Table, Column, DateTime, Float, String, insert, select, delete, update, exists
 from datetime import datetime
 
 import pandas as pd
@@ -6,7 +6,7 @@ from sqlalchemy.dialects import postgresql
 
 import hashlib
 import re
-from subprocess import run
+from subprocess import getoutput
 
 
 email_regex     = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
@@ -56,14 +56,14 @@ class UsersWrapper():
         # checks if any field is invalid
         result = self.validate_input(username, email, password)
 
-        if "invalid" in result.values():
+        if result["status"] == -1:
             return result
 
         # checks if username and email are available 
         # or if they are already taken
         result = self.check_availability(username, email)
 
-        if "taken" in result.values():
+        if result["status"] == -1:
             return result
 
         # as last step we cannot store the password as rawtext
@@ -73,7 +73,8 @@ class UsersWrapper():
         api_key  = self.generate_api_key(username, password)
 
         # Inserts the value into the table.
-        insert_statement = insert(self.table).values(username = username, 
+        insert_statement = insert(self.table).values(time = datetime.utcnow(),
+                                                     username = username, 
                                                      email    = email, 
                                                      user_db  = f'{username}_db',
                                                      password = password, 
@@ -82,7 +83,7 @@ class UsersWrapper():
         with self.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
             connection.execute(insert_statement)
 
-        return {"status": f'ok. {api_key}'}
+        return {"status": 0, "message": f'ok. {api_key}'}
 
 
 
@@ -133,22 +134,30 @@ class UsersWrapper():
 
         statement = select(self.table).where(self.table.c.username == username)
         statement = statement.compile(dialect = postgresql.dialect())
+
         result    = pd.read_sql(statement, self.engine)
 
         if result.empty:
-            availability["username"] = "free"
+            availability["status"]  = 0
+            availability["message"] = "name available."
+
         else:
-            availability["username"] = "taken"
+            availability["status"]  = -1
+            availability["message"] = "name unavailable."
 
 
         statement = select(self.table).where(self.table.c.email == email)
         statement = statement.compile(dialect = postgresql.dialect())
+
         result    = pd.read_sql(statement, self.engine)
 
         if result.empty:
-            availability["email"] = "free"
+            availability["status"]  = 0
+            availability["message"] = "email available."
+
         else:
-            availability["email"] = "taken"
+            availability["status"]  = -1
+            availability["message"] = "email unavailable."
 
         return availability
 
@@ -183,9 +192,21 @@ class UsersWrapper():
 
         result = {}
  
-        result["username"] = self.validate_username(username)
-        result["email"]    = self.validate_email(email)
-        result["password"] = self.validate_password(password)
+        if self.validate_username(username) == False:
+            result["status"] = -1 
+            result["message"] = "invalid username."
+
+        elif self.validate_email(email) == False:
+            result["status"] = -1
+            result["message"] = "invalid email."
+
+        elif self.validate_password(password) == False:
+            result["status"] = -1
+            result["message"] = "invalid password."
+
+        else:
+            result["status"] = 0
+            result["message"] = "ok."
 
 
         return result
@@ -225,32 +246,32 @@ class UsersWrapper():
 
         # checks the username
         if (re.fullmatch(username_regex, username)):
-            return "valid"
+            return True
 
         else:
-            return "invalid"
+            return False
 
 
     def validate_email(self, email: str):
 
         # checks the email
         if(re.fullmatch(email_regex, email)):
-            return "valid"
+            return True
 
         else:
-            return "invalid"
+            return False
 
     def validate_password(self, password: str):
 
         # checks the password
         if (len(password) < 8) or (len(password) > 60):
-            return "invalid"
+            return False
 
         elif ' ' in password:
-            return "invalid"
+            return False
 
         else:
-            return "valid"
+            return True
 
     #---------------------------------------------------------------#
 

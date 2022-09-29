@@ -1,23 +1,19 @@
+from sqlalchemy         import MetaData, Table, Column, DateTime, Float, insert, select, delete
+from sqlalchemy_utils   import database_exists, create_database
+from sqlalchemy         import create_engine
+
 import datetime
 import pytz
 import psycopg2
-from sqlalchemy import create_engine
 import pandas as pd
 
-from sys import path
-from os.path import abspath, dirname
+from sys        import path
+from os.path    import abspath, dirname
 
 # the directory where the database is defined to the path
-current_file_directory = dirname(abspath(__file__))
-database_definition_directory = current_file_directory + "/define_db"
-path.append( database_definition_directory )
+root_dir = dirname(dirname(abspath(__file__)))
+path.append( root_dir + "/define_db" )
 
-# imports database tables definitions 
-from ambiental_variables            import *
-from ambiental_variables_intervals  import *
-from tables_utilities               import *
-
-from sqlalchemy import MetaData, Table, Column, DateTime, Float, insert, select, delete
 
 #
 # this is a database connection class 
@@ -29,6 +25,8 @@ from sqlalchemy import MetaData, Table, Column, DateTime, Float, insert, select,
 # that basically implies having a new database of user data
 # and one instance of the class "DbConnection" for each user.
 #
+
+from tables_utilities import load_data_tables
 
 
 class DbConnection():
@@ -66,20 +64,16 @@ class DbConnection():
     def configure_connection(self) -> None:
 
         """
-            This function is intended to be easily modified by the user if desired, 
-            here you specify the aliases for the tables that will be used for the 
-            database.
         """
-        self.all_tables = load_all_tables(self.engine, self.metadata)
 
-        if self.all_tables == {}:
-            print("As no tables were found default ones will be created...")
-            self.all_tables = create_tables_from_file(file_name = ".default_settings.json",
-                                                      engine    = self.engine)
+        # verify if the database exists, if not, creates it
+        self.verify_database()
 
-        print(self.all_tables.keys())
-        self.var_tables = self.all_tables["variables"]
-        self.intervals_table = self.all_tables["intervals"]
+        # load the tables from the database, if they don't exist, it creates them
+        self.all_tables = load_data_tables(self.engine, self.metadata)
+        self.var_table = self.all_tables["ambiental_variables"]
+
+        self.intervals_table = self.all_tables["variables_intervals"]
         self.actuators_table = self.all_tables["actuators"]
 
         # now I need to override the initialization of a table
@@ -90,29 +84,19 @@ class DbConnection():
         print("-"*60)
 
 
-    def insert_default_data(self) -> None:
-
-        """
-            This function inserts the default values for the acceptable and optimal values.
-        """
-
-        print("Done inserting default values in ambiental variable tables.")
-        print("-"*60)
-
-
-    ############################################################# 
     #-----------------------------------------------------------#
     # Functions to read and write the ambiental variable tables #
     #-----------------------------------------------------------#
 
 
-    def write_data(self, value: float, table_name: str, verbose = False) -> None:
+
+    def write_data(self, value: float, varname: str, verbose = False) -> None:
 
         """
         INPUTS:
                 value:      Float to be written in the database.
 
-                table_name: The table where the data will be written. 
+                varname:    Name of the variable which has a measurement to be written. 
 
                 verbose:    Option to show the output/status of the query.
                             Exit code 0, means no problem and -1 means there was a problem.
@@ -120,11 +104,7 @@ class DbConnection():
                 None. This function writes the data in the table corresponding to the alias.
         """
 
-        if alias not in self.var_tables.keys():
-            print("Not existent table: {}".format(table_name))
-            return 
-
-        result = self.var_tables[table_name].insert_data(value = value)
+        result = self.var_table.insert_data(varname = varname, value = value)
 
         if verbose:
             print("Inserted data in table {0}, with exit code: {1}".format(table_name, result))
@@ -132,11 +112,11 @@ class DbConnection():
         return result
 
 
-    def read_data(self, table_name: str, timestamp_start: str, timestamp_end: str) -> pd.DataFrame:
+    def read_data(self, varname: str, timestamp_start: str, timestamp_end: str) -> pd.DataFrame:
 
         """
         INPUTS:
-                - table_name:         The table where the data will be read.
+                - varname:         The table where the data will be read.
                 - timestamp_start:    Start timestamp of the data to be read. It's format is 
                                       'YYYY-MM-DD HH:MM:SS'.
                 - timestamp_end:      End timestamp of the data to be read. It's format is
@@ -144,20 +124,17 @@ class DbConnection():
                 
         OUTPUT:
                 Returns a pandas dataframe with this shape:
-                +-----------------------+-----------------+
-                |   time                |   column_name   |
-                +-----------------------+-----------------+
-                |                       |                 |
-                | "YYYY/MM/DD %H:%M:%S" | decimal_number  |
-                +-----------------------+-----------------+
+                +-----------------------+---------------+-----------------+
+                |   time                |   varname     |   column_name   |
+                +-----------------------+---------------+-----------------+
+                |                       |               |                 |
+                | "YYYY/MM/DD %H:%M:%S" |   Strig       | decimal_number  |
+                +-----------------------+---------------+-----------------+
         """
 
-        if table_name not in self.var_tables.keys():
-            print("Not existent table: {}".format(table_name))
-            return
-
-        data = self.var_tables[table_name].read_data(timestamp_start = timestamp_start,
-                                                       timestamp_end = timestamp_end).to_dict()
+        data = self.var_table.read_data(varname = varname,
+                                        timestamp_start = timestamp_start,
+                                        timestamp_end = timestamp_end).to_dict()
 
         data["time"] = self.convert2datetime( data["time"] ) 
     
@@ -197,6 +174,7 @@ class DbConnection():
             print("Inserted data in table {0}, with exit code: {1}".format(variable, result))
 
         return result
+
 
 
     def read_ambiental_variable_interval(self, variable: str) -> pd.DataFrame:
@@ -284,31 +262,15 @@ class DbConnection():
     #           create operations
     #---------------------------------------#
 
-    def create_ambiental_variable_table(self,
-                                        table_name:  str,
-                                        precision =  3):
+    def verify_database(self) -> None:
 
-        if table_name in self.var_tables.keys():
-            return {"exit_status": "ok. table already existent."}
+        if not database_exists(self.engine.url):
 
+            create_database(engine.url)
+            print('Database created!')
 
-        # checks if name has the specified shape
-        if table_name.endswith("_var"):
+        print('Database found!')
 
-            # creates and stores the table
-            self.var_tables[table_name] = Variable(engine     = self.engine,  
-                                                   table_name = table_name, 
-                                                   column     = table_name + "_level", 
-                                                   precision  = precision)
-            self.var_tables[table_name].create_table()
-            self.all_tables["variables"][table_name] = self.var_tables[table_name]
-
-            return {"exit_status": "ok."}
-
-        else:
-
-            return {"exit_status": "bad table name."}
-                                                   
 
 
     #---------------------------------------#

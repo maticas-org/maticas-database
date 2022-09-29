@@ -11,11 +11,22 @@ Base = declarative_base()
 
 class Actuator(Base):
 
+    """
+    Table structure:
+
+        +-----------------------+-----------------------+------------------+----------------+---------------+--------------+------------------+
+        |       actuator_id     |        time           |   actuator_name  |   start_time   |   end_time    |   time_on    |   time_off       |
+        |-----------------------|-----------------------+------------------+----------------+---------------+--------------+------------------+
+        |                       |                       |                  |                |               |              |                  |
+        |           id          | "YYYY/MM/DD %H:%M:%S" |  "actuator_name" |   "%H:%M:%S"   |  "%H:%M:%S"   |    nminutos  |     nminutos     |
+        +-----------------------+-----------------------+------------------+----------------+---------------+--------------+------------------+
+    """
+
     __tablename__ = 'actuators'
 
     actuator_id     = Column(Integer,       autoincrement = "auto", primary_key = True)
     time            = Column(DateTime,      nullable = False,       default = datetime.utcnow)
-    actuator_name   = Column(String(128),   nullable = False)
+    actuator_name   = Column(String(128),   nullable = False,       unique = True)
     start_time      = Column(Time,          nullable = False)
     end_time        = Column(Time,          nullable = False)
     time_on         = Column(Float,         nullable = False)
@@ -49,6 +60,28 @@ class AmbientalVaraible(Base):
 
     def __repr__(self):
         return f"<AmbientalVaraible {self.varname}>"
+
+
+class VariableIntervals(Base):
+
+    """
+    Table Structure:
+        +-----------------------+-----------------+--------------------+---------------------+------------------+------------------+
+        |   time                |   variable      |   min_acceptable   |   max_acceptable    |   min_optimal    |   max_optimal    |
+        +-----------------------+-----------------+--------------------+---------------------+------------------+------------------+
+        |                       |                 |                    |                     |                  |                  |
+        | "YYYY/MM/DD %H:%M:%S" | "variable_name" |       number       |       number        |       number     |       number     |
+        +-----------------------+-----------------+--------------------+---------------------+------------------+------------------+
+    """
+
+    __tablename__ = 'variables_intervals'
+
+    time            = Column(DateTime,  nullable = False, default = datetime.utcnow)
+    variable        = Column(String(60), primary_key = True)
+    min_acceptable  = Column(Float(precision = 3), nullable = False)
+    max_acceptable  = Column(Float(precision = 3), nullable = False)
+    min_optimal     = Column(Float(precision = 3), nullable = False)
+    max_optimal     = Column(Float(precision = 3), nullable = False)
 
 
 

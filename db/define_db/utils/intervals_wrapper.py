@@ -1,8 +1,8 @@
 from sqlalchemy import MetaData, Table, Column, DateTime, Float, String, insert, select, delete, update 
 from datetime import datetime
+
 import pandas as pd
 from sqlalchemy.dialects import postgresql
-
 
 
 """
@@ -17,15 +17,13 @@ from sqlalchemy.dialects import postgresql
 """
 
 
-class Variable_Intervals():
+class IntervalsWrapper():
 
-    def __init__(self,
-                 engine,
-                 precision = 3):
+    def __init__(self, table: Table, engine):
 
+        self.table  = table
         self.engine = engine
-        self.metadata_obj = MetaData()
-        self.table_name = 'variables_intervals'
+
 
     def insert_data(self,
                     variable:               str,
@@ -86,6 +84,7 @@ class Variable_Intervals():
         result = pd.read_sql(statement, self.engine)
         return result
 
+
     def insert_data_watchdog(self,
                              acceptable_interval:   tuple,
                              optimal_interval:      tuple) -> int:
@@ -113,54 +112,5 @@ class Variable_Intervals():
             return -1
 
         return 0 
-
-
-    def create_table(self) -> None:
-            
-        """
-            Create the table in the database.
-        """
-        self.table  = Table( self.table_name,
-                             self.metadata_obj,       
-                             Column("time",           DateTime,             default = datetime.utcnow),
-                             Column("variable",       String(60),           primary_key = True),
-                             Column("min_acceptable", Float(precision = 3), nullable = False),
-                             Column("max_acceptable", Float(precision = 3), nullable = False),
-                             Column("min_optimal",    Float(precision = 3), nullable = False),
-                             Column("max_optimal",    Float(precision = 3), nullable = False),)
-
-        self.metadata_obj.create_all(self.engine)
-
-    
-    def insert_default_data(self) -> None:
-
-        """
-            Inserts default data into the table.
-            Mainly used for initialization.
-        """
-
-        self.insert_data(min_value = 0, max_value = 100)
-
-
-
-class Variable_Intervals_From_DB(Variable_Intervals):
-
-    def __init__(self,
-                 engine,
-                 table: Table):
-
-        self.engine = engine
-        self.metadata_obj = MetaData()
-        self.table = table
-
-    def create_table(self) -> None:
-            
-        """
-            Create the table in the database.
-        """
-        print("This table has already been created.")
-        return 0
-
-
 
 
