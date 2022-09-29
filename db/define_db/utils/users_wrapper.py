@@ -97,24 +97,62 @@ class UsersWrapper():
         # checks if any field is invalid
         result = self.validate_input(username, "default@gmail.com", password)
 
-        if "invalid" in result.values():
+        if result["status"] == -1:
             return result
+
 
         statement = select(self.table).where(self.table.c.username == username)
         statement = statement.compile(dialect = postgresql.dialect())
         result    = pd.read_sql(statement, self.engine)
-        api_key   = result["api_key"][0]
 
-        print(result)
 
         if result.empty:
-            return {"auth": "User not found."}
+            return {"status": -1, "message": "user not found."}
 
         else:
+            api_key   = result["api_key"][0]
+
             password = self.cover_password(password)
             password_check = result["password"][0] == password
 
-            return {"auth": f'ok. {api_key}'}
+            if password_check:
+                return {"status": 0, "message": f'ok. {api_key}'}
+            else:
+                return {"status": -1, "message": "wrong password."}
+
+
+    def auth_user_by_email(self, email: str, password: str) -> dict:
+
+        # deletes white spaces on the sides of the strings
+        email    = self.sanitize_email(email)
+        password = self.sanitize_password(password)
+
+        # checks if any field is invalid
+        result = self.validate_input("defaultUsername", email, password)
+
+        if result["status"] == -1:
+            return result
+
+
+        statement = select(self.table).where(self.table.c.email == email)
+        statement = statement.compile(dialect = postgresql.dialect())
+        result    = pd.read_sql(statement, self.engine)
+
+
+        if result.empty:
+            return {"status": -1, "message": "email not found."}
+
+        else:
+            api_key   = result["api_key"][0]
+
+            password = self.cover_password(password)
+            password_check = result["password"][0] == password
+
+            if password_check:
+                return {"status": 0, "message": f'ok. {api_key}'}
+            else:
+                return {"status": -1, "message": "wrong password."}
+
 
 
     def check_availability(self, 
