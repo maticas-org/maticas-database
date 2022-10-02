@@ -33,6 +33,10 @@ class UsersWrapper():
         self.table  = table
         self.engine = engine
 
+    #------------------------------------------------------------------------#
+    #                     user data insertion functions                      #
+    #------------------------------------------------------------------------#
+
     def insert_data(self,
                     username:       str,
                     email:          str,
@@ -86,6 +90,9 @@ class UsersWrapper():
         return {"status": 0, "message": f'ok. {api_key}'}
 
 
+    #------------------------------------------------------------------------#
+    #                     user data retrieval functions                      #
+    #------------------------------------------------------------------------#
 
 
     def auth_user_by_username(self, username: str, password: str) -> dict:
@@ -116,7 +123,7 @@ class UsersWrapper():
             password_check = result["password"][0] == password
 
             if password_check:
-                return {"status": 0, "message": f'ok. {api_key}'}
+                return {"status": 0, "message": f'{api_key}'}
             else:
                 return {"status": -1, "message": "wrong password."}
 
@@ -149,11 +156,42 @@ class UsersWrapper():
             password_check = result["password"][0] == password
 
             if password_check:
-                return {"status": 0, "message": f'ok. {api_key}'}
+                return {"status": 0, "message": f'{api_key}'}
             else:
                 return {"status": -1, "message": "wrong password."}
 
 
+
+
+    def get_user_id_and_api_key(self, username: str) -> dict:
+
+        # deletes white spaces on the sides of the strings
+        username = self.sanitize_username(username)
+
+        # checks if any field is invalid
+        result = self.validate_input(username, "default@gmail.com", "anyPassword")
+
+        if result["status"] == -1:
+            return result
+
+
+        statement = select(self.table).where(self.table.c.username == username)
+        statement = statement.compile(dialect = postgresql.dialect())
+        result    = pd.read_sql(statement, self.engine)
+
+
+        if result.empty:
+            return {"status": -1, "message": "user not found."}
+
+        else:
+            user_id = result["id_"][0] 
+            api_key = result["api_key"][0] 
+            return {"status": 0, "message": "ok", "user_id": user_id, "api_key": api_key}
+
+
+    #------------------------------------------------------------------------#
+    #                     validation functions                               #
+    #------------------------------------------------------------------------#
 
     def check_availability(self, 
                            username: str,
@@ -200,26 +238,6 @@ class UsersWrapper():
         return availability
 
 
-    def sanitize_input(self, 
-                       username:    str, 
-                       email:       str, 
-                       password:    str):
-
-        """
-            INPUT:
-                    - username: User name to sanitize.
-                    - email:    Email to sanitize.
-                    - password: Password to sanitize
-
-            OUTPUT:
-                    The input variables sanitized.
-        """
-
-        username = self.sanitize_username(username)
-        email    = self.sanitize_email(email)
-        password = self.sanitize_password(password)
-
-        return username, email, password
 
 
 
@@ -249,37 +267,6 @@ class UsersWrapper():
 
         return result
         
-
-
-    def cover_password(self, password: str):
-
-        vowels    = len(re.findall('[aeiou]', password, re.IGNORECASE))
-        uppercase = len(re.findall(r'[A-Z]',  password))
-
-        string    = "{0}.{1}.{2}.{1}.{0}".format(vowels, uppercase, password)
-        hashhh    = hashlib.sha512( string.encode("utf-8") ).hexdigest()
-
-        return hashhh
-
-
-    def generate_api_key(self, username, password):
-
-        uppercase_pass = str(len(re.findall(r'[A-Z]',  password)))
-        uppercase_user = str(len(re.findall(r'[A-Z]',  username)))
-
-        mem_data = getoutput("free | sed -n '2 p'")
-        numbers  = re.findall(numbers_regex, mem_data)
-        number   = "".join(numbers)
-        
-        string = "".join([uppercase_user, uppercase_pass, number, username])
-        hashhh    = hashlib.sha512( string.encode("utf-8") ).hexdigest()
-
-        return hashhh
-
-
-
-    #---------------------------------------------------------------#
-
     def validate_username(self, username: str):
 
         # checks the username
@@ -311,7 +298,31 @@ class UsersWrapper():
         else:
             return True
 
+
     #---------------------------------------------------------------#
+    #                   input sanitization functions                #
+    #---------------------------------------------------------------#
+
+    def sanitize_input(self, 
+                       username:    str, 
+                       email:       str, 
+                       password:    str):
+
+        """
+            INPUT:
+                    - username: User name to sanitize.
+                    - email:    Email to sanitize.
+                    - password: Password to sanitize
+
+            OUTPUT:
+                    The input variables sanitized.
+        """
+
+        username = self.sanitize_username(username)
+        email    = self.sanitize_email(email)
+        password = self.sanitize_password(password)
+
+        return username, email, password
 
     def sanitize_username(self, username: str):
         return username.strip() 
@@ -323,4 +334,35 @@ class UsersWrapper():
         return password.strip()
 
 
+    #---------------------------------------------------------------#
+    #                   password encryption functions               #
+    #---------------------------------------------------------------#
+
+    def cover_password(self, password: str):
+
+        vowels    = len(re.findall('[aeiou]', password, re.IGNORECASE))
+        uppercase = len(re.findall(r'[A-Z]',  password))
+
+        string    = "{0}.{1}.{2}.{1}.{0}".format(vowels, uppercase, password)
+        hashhh    = hashlib.sha512( string.encode("utf-8") ).hexdigest()
+
+        return hashhh
+
+    #---------------------------------------------------------------#
+    #                   api key generation                          #
+    #---------------------------------------------------------------#
+
+    def generate_api_key(self, username, password):
+
+        uppercase_pass = str(len(re.findall(r'[A-Z]',  password)))
+        uppercase_user = str(len(re.findall(r'[A-Z]',  username)))
+
+        mem_data = getoutput("free | sed -n '2 p'")
+        numbers  = re.findall(numbers_regex, mem_data)
+        number   = "".join(numbers)
+        
+        string = "".join([uppercase_user, uppercase_pass, number, username])
+        hashhh    = hashlib.sha512( string.encode("utf-8") ).hexdigest()
+
+        return hashhh
 

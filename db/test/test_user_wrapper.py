@@ -71,6 +71,17 @@ def test_user_auth_by_email(example_users: dict, expected_output: tuple) -> None
     print(tuple(results) == expected_output)
     print('-'*50)
 
+def test_get_user_id(example_users: dict) -> None:
+
+    results = []
+
+    for user in example_users:
+        print(f'Getting user id for {example_users[user]["username"]}...')
+
+        ans = usrs.get_user_id(example_users[user]["username"])
+        print(ans)
+
+    print('-'*50)
 
 
 test_user_data_insertion(example_users = example_users)
@@ -78,7 +89,7 @@ test_user_auth_by_username(example_users = example_users,
                            expected_output = output_for_example_users_auth_by_username)
 test_user_auth_by_email(example_users = example_users,
                            expected_output = output_for_example_users_auth_by_username)
-
+test_get_user_id(example_users = example_users)
 
 
 

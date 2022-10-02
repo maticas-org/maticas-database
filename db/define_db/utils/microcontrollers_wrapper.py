@@ -31,10 +31,10 @@ class MicrocontrollersWrapper():
     def read_data_by_usr_id(self, usr_id: str) -> pd.DataFrame:
 
         """
-            Reads of the selected actuator.
+            returns the user microcontroller mac addresses.
         """
 
-        statement = select(self.table).where(self.table.c.usr_id == usr_id)
+        statement = select(self.table.c.mac_address).where(self.table.c.usr_id == usr_id)
 
         # compiles the statement into a PosgresSQL query string.
         statement = statement.compile(dialect = postgresql.dialect())
@@ -81,9 +81,9 @@ class MicrocontrollersWrapper():
                     }
         """
 
-        usr_id, name, mac_address = self.sanitize_input(self, usr_id = usr_id,
-                                                              mic_name = name,
-                                                              mac_address = mac_address)
+        usr_id, name, mac_address = self.sanitize_input(usr_id = usr_id,
+                                                        mic_name = name,
+                                                        mac_address = mac_address)
 
         input_check = self.insert_data_watchdog(usr_id, name, mac_address)
 
@@ -93,6 +93,7 @@ class MicrocontrollersWrapper():
         
         # insert statement for the table
         insert_statement = insert(self.table).values(usr_id = usr_id,
+                                                     time = datetime.utcnow(),
                                                      name   = name,
                                                      mac_address = mac_address)
 
@@ -156,7 +157,7 @@ class MicrocontrollersWrapper():
     #---------------------------------------------------------------#
 
     def sanitize_input(self, usr_id: int, mic_name: str, mac_address: str):
-        return sanitize_usr_id(usr_id),  self.sanitize_name(mic_name), self.sanitize_mac(mac_address)
+        return self.sanitize_usr_id(usr_id),  self.sanitize_name(mic_name), self.sanitize_mac(mac_address)
 
 
     def sanitize_usr_id(self, usr_id: int):

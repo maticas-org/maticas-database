@@ -4,6 +4,7 @@ import psycopg2
 import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData, Table, Column, DateTime, Float, insert, select, delete
+from sqlalchemy_utils import database_exists, create_database
 
 from sys import path
 from os.path import abspath, dirname
@@ -42,6 +43,12 @@ class UsrDbConnection():
         print(conn_string)
 
         self.engine = create_engine(conn_string)
+
+        # create a database (if it doesn't exist)
+        if not database_exists(self.engine.url):
+            create_database(self.engine.url)
+            print('Database created!')
+
         self.configure_connection()
 
         print("Done creating Users database connection.")
@@ -64,13 +71,12 @@ class UsrDbConnection():
         print("-"*60)
 
 
-    ############################################################# 
-    #-----------------------------------------------------------#
-    #                                                           #
-    #-----------------------------------------------------------#
 
+    #------------------------------------------------------------------------#
+    #                           Insert operations                            #
+    #------------------------------------------------------------------------#
 
-    def add_user(self, username: str, email: str, password: str) -> None:
+    def add_user(self, username: str, email: str, password: str) -> dict:
 
         """
         """
@@ -82,9 +88,46 @@ class UsrDbConnection():
         return result
 
 
+    def add_mic(self, username: str, api_key: str, mac_address: str, mic_name: str) -> dict:
+
+        """
+        """
+
+        user_info = self.check_credentials(username = username, api_key = api_key)
+
+        if user_info["status"] == -1:
+            return user_info
+
+        result = self.mics_table.insert_data(usr_id = int(user_info["user_id"]),
+                                             mac_address = mac_address,
+                                             name = mic_name)
+        return result
 
 
-    def auth_user_by_username(self, username: str, password: str) -> str:
+    def add_topic(self, username:str, api_key: str, topic: str) -> dict:
+
+
+        user_info = self.check_credentials(username = username, api_key = api_key)
+
+        if user_info["status"] == -1:
+            return user_info
+
+        # gets the dataframes of the mac adresses the user has registered
+        mac_addresses = self.mics_table.read_data_by_usr_id(int(user_info["user_id"]))
+
+        result = self.topics_table.insert_data(usr_id    = int(user_info["user_id"]),
+                                               usr_name  = username,
+                                               mac_addresses = mac_addresses,
+                                               topic     = topic)
+
+        return result
+
+
+    #------------------------------------------------------------------------#
+    #                   Authentication operations                            #
+    #------------------------------------------------------------------------#
+
+    def auth_user_by_username(self, username: str, password: str) -> dict:
 
         """
         """
@@ -95,12 +138,58 @@ class UsrDbConnection():
         return result
 
 
-    def auth_user_by_email(self, username: str, password: str) -> str:
+    def auth_user_by_email(self, email: str, password: str) -> dict:
 
         """
         """
 
-        return 0
+        result = self.users_table.auth_user_by_email(email = email,
+                                                     password = password)
+
+        return result
 
 
+    #------------------------------------------------------------------------#
+    #                             Read operations                            #
+    #------------------------------------------------------------------------#
+
+
+    def get_mic_data_by_usr_and_mac(self, username: str, mac_address: str) -> dict:
+
+        """
+        """
+
+        # query the user id
+        user_id = self.users_table.get_user_id(username = username)
+
+        # if the user id is not found, return the result from the query
+        if user_id["status"] == -1:
+            return user_id
+
+        # if found, query the microcontroller data
+        result = self.mics_table.get_mic_data_by_usr_and_mac(usr_id = int(usr_id["message"]),
+                                                             mac_address = mac_address)
+
+        return result
+
+    #------------------------------------------------------------------------#
+    #                             Check credentials                          #
+    #------------------------------------------------------------------------#
+
+    def check_credentials(self, username: str, api_key: str) -> dict:
+
+        """
+        """
+
+        # query the user id and api key
+        user_info = self.users_table.get_user_id_and_api_key(username = username)
+
+        # checks if input data is correct
+        if user_info["status"] == -1:
+            return user_info
+
+        if api_key != user_info["api_key"]:
+            return {"status": -1, "message": "Invalid API key."}
+
+        return user_info
 

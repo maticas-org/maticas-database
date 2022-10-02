@@ -11,7 +11,6 @@ Base = declarative_base()
 
 class User(Base):
 
-    print("User class created.")
     """
     Table Structure:
 
@@ -45,6 +44,8 @@ class User(Base):
     # every user has many mqtt topics which send data to the server
     usr_topics  = relationship("MQTTTopics")
 
+    print("User class created.")
+
     def __repr__(self):
         return f"<User {self.username}>"
 
@@ -66,13 +67,14 @@ class Microcontrollers(Base):
         Microcontrollers table, this table contains the microcontrollers that the user has registered.
     """
 
-    print("Microcontrollers class created.")
     __tablename__ = 'microcontrollers'
 
     usr_id      = Column(Integer,       ForeignKey('users.id_'),     primary_key = True)
     time        = Column(DateTime,      nullable = False,            default     = datetime.utcnow)
     name        = Column(String(128),   nullable = True)
     mac_address = Column(String(20),    unique = True,              primary_key = True )
+
+    print("Microcontrollers class created.")
 
     def __repr__(self):
         return f"<Microcontroller {self.name}>"
@@ -83,13 +85,26 @@ class Microcontrollers(Base):
 class MQTTTopics(Base):
 
     """
+    Table Structure:
+
+        +-----------+-----------------------+----------------------------------------+
+        |   usr_id  |   time                |               topic                    |
+        +-----------+-----------------------+----------------------------------------+
+        |           |                       |                                        |
+        |   int     | "YYYY/MM/DD %H:%M:%S" | "/esp32/user_name/mac_address/varname" |
+        +-----------+-----------------------+----------------------------------------+
+
+
         MQTTTopics table, this table contains the topics that the user has registered.
     """
-    print("MQTTTopics class created.\n")
+
     __tablename__ = 'mqtt_topics'
 
     usr_id  = Column(Integer,       ForeignKey('users.id_'), primary_key = True)
+    time    = Column(DateTime,      nullable = False,            default     = datetime.utcnow)
     topic   = Column(String(128),   unique = True,           primary_key = True)
+
+    print("MQTTTopics class created.\n")
 
     def __repr__(self):
         return f"<Microcontroller {self.topic}>"
