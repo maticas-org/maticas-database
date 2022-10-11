@@ -189,6 +189,30 @@ class UsersWrapper():
             return {"status": 0, "message": "ok", "user_id": user_id, "api_key": api_key}
 
 
+
+    
+    def get_user_database_name_and_user_id(self) -> dict:
+
+        #gets all the user ids and the corresponding database name
+        statement = select(self.table.c.id_, self.table.c.user_db)
+        statement = statement.compile(dialect = postgresql.dialect())
+        result    = pd.read_sql(statement, self.engine)
+
+        if result.empty:
+            return None
+
+        else: 
+            #https://stackoverflow.com/questions/26716616/convert-a-pandas-dataframe-to-a-dictionary
+            user_id_and_database = {}
+
+
+            # reestructures the dictionary 
+            for record in result.to_dict("records"):
+                user_id_and_database[record["id_"]] = record["user_db"]
+
+            return user_id_and_database
+
+
     #------------------------------------------------------------------------#
     #                     validation functions                               #
     #------------------------------------------------------------------------#

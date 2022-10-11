@@ -48,7 +48,7 @@ class ActuatorsWrapper():
             Reads of the selected actuator.
         """
 
-        statement = select(self.table).where(self.table.c.actuator == actuator)
+        statement = select(self.table).where(self.table.c.actuator_name == actuator)
 
         # compiles the statement into a PosgresSQL query string.
         statement = statement.compile(dialect = postgresql.dialect())
@@ -96,7 +96,7 @@ class ActuatorsWrapper():
             return input_check
 
         # statement for insertion of new data
-        insert_statement = insert(self.table).values(actuator   = actuator,
+        insert_statement = insert(self.table).values(actuator_name   = actuator,
                                                      start_time = start_time,
                                                      end_time   = end_time,
                                                      time_on    = time_on,

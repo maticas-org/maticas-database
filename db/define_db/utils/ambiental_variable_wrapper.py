@@ -1,7 +1,8 @@
-from sqlalchemy             import MetaData, Table
+from sqlalchemy             import MetaData, Table, insert, select
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm         import Session
 from sqlalchemy             import Table
+from sqlalchemy.dialects    import postgresql
 
 import pandas as pd
 
