@@ -112,7 +112,7 @@ class DbConnection():
         return result
 
 
-    def read_data(self, varname: str, timestamp_start: str, timestamp_end: str) -> pd.DataFrame:
+    def read_data(self, varname: str, timestamp_start: str, timestamp_end: str) -> dict:
 
         """
         INPUTS:
@@ -177,7 +177,7 @@ class DbConnection():
 
 
 
-    def read_ambiental_variable_interval(self, variable: str) -> pd.DataFrame:
+    def read_ambiental_variable_interval(self, variable: str) -> dict:
 
         """
         INPUTS:
@@ -237,7 +237,7 @@ class DbConnection():
         return result
         
 
-    def read_actuators_configuration(self, actuator_name: str) -> pd.DataFrame:
+    def read_actuators_configuration(self, actuator_name: str) -> dict:
 
         """
             INPUT:
@@ -254,7 +254,7 @@ class DbConnection():
         """
 
         data = self.actuators_table.read_data(actuator = actuator_name).to_dict()
-        data["time"] = convert2datetime(data["time"])
+        data["time"] = self.convert2datetime(data["time"])
 
         return data
 
@@ -266,7 +266,7 @@ class DbConnection():
 
         if not database_exists(self.engine.url):
 
-            create_database(engine.url)
+            create_database(self.engine.url)
             print('Database created!')
 
         print('Database found!')

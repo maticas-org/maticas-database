@@ -172,6 +172,21 @@ class UsrDbConnection():
 
         return result
 
+
+    def get_user_database_name_and_user_id(self) -> dict:
+
+        databases_and_ids = self.users_table.get_user_database_name_and_user_id()
+
+        return databases_and_ids
+        
+
+    def get_user_id(self, username: str) -> dict:
+
+        # query the user id
+        user_id = self.users_table.get_user_id(username = username)
+
+        return user_id
+
     #------------------------------------------------------------------------#
     #                             Check credentials                          #
     #------------------------------------------------------------------------#
