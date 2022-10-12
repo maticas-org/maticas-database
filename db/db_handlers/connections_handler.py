@@ -3,6 +3,7 @@ from os.path import abspath, dirname
 
 current_file_directory = dirname(abspath(__file__))
 path.append(current_file_directory + "/define_db")
+path.append(current_file_directory)
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy                 import create_engine, MetaData
@@ -94,7 +95,7 @@ class ConnectionsHandler():
     #                    Insert users relative data                          #
     #------------------------------------------------------------------------#
 
-    def add_user(self, username: str, email: str, password: str) -> dict
+    def add_user(self, username: str, email: str, password: str) -> dict:
         return self.users_db_connection.add_user(username, email, password)
 
 
@@ -120,8 +121,10 @@ class ConnectionsHandler():
     #                       Get user data operations                         #
     #------------------------------------------------------------------------#
 
-    def get_user_id(self, username: str) -> int:
-        return self.users_db_connection.get_user_id(username)
+    def get_user_id(self, username: str) -> dict:
+
+        ans = self.users_db_connection.get_user_id(username)
+        return ans
 
 
     def get_mic_data_by_usr_and_mac(self, username: str, mac_address: str) -> dict:
@@ -136,7 +139,11 @@ class ConnectionsHandler():
             return check
 
         usr_id = self.get_user_id(username)
-        return self.databases[usr_id].read_ambient_data(varname, timestamp_start, timestamp_end)
+
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].read_data(varname, timestamp_start, timestamp_end)
 
 
     def read_ambiental_variable_interval(self, username: str, api_key: str, varname: str) -> dict:
@@ -146,7 +153,11 @@ class ConnectionsHandler():
             return check
 
         usr_id = self.get_user_id(username)
-        return self.databases[usr_id].read_ambiental_variable_interval(varname)
+
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].read_ambiental_variable_interval(varname)
 
 
     def read_actuators_configuration(self, username: str, api_key: str, actuator_name: str) -> dict:
@@ -157,7 +168,10 @@ class ConnectionsHandler():
 
         usr_id = self.get_user_id(username)
 
-        return self.databases[usr_id].read_actuators_configuration(actuator_name)
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].read_actuators_configuration(actuator_name)
 
     #------------------------------------------------------------------------#
     #                       Write user data on his/her database              #
@@ -165,6 +179,55 @@ class ConnectionsHandler():
     def write_ambiental_data(self, value: float, varname: str, verbose = False) -> None:
         return self.databases[usr_id].write_data(value, varname, verbose)
 
+
+    def write_ambiental_variable_interval(self,
+                                          username: str,
+                                          api_key: str,
+                                          variable: str, 
+                                          acceptable_interval: tuple,
+                                          optimal_interval:    tuple, 
+                                          verbose = False) -> dict:
+
+        check = self.users_db_connection.check_credentials(username, api_key)
+        if check["status"] == -1:
+            return check
+
+        usr_id = self.get_user_id(username)
+
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].write_ambiental_variable_interval(variable,
+                                                                              acceptable_interval,
+                                                                              optimal_interval,
+                                                                              verbose)
+
+
+    def write_actuators_configuration(self,
+                                      username: str,
+                                      api_key: str,
+                                      actuator_name:  str,
+                                      start_time:     str,
+                                      end_time:       str,
+                                      on_time:        int,
+                                      off_time:       int,
+                                      verbose = False) -> int:
+
+        check = self.users_db_connection.check_credentials(username, api_key)
+        if check["status"] == -1:
+            return check
+
+        usr_id = self.get_user_id(username)
+
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].write_actuators_configuration(actuator_name,
+                                                                         start_time,
+                                                                         end_time,
+                                                                         on_time,
+                                                                         off_time,
+                                                                         verbose)
 
 
     #------------------------------------------------------------------------#

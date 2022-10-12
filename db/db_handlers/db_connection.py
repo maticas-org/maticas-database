@@ -152,7 +152,7 @@ class DbConnection():
                                           variable: str, 
                                           acceptable_interval: tuple,
                                           optimal_interval:    tuple, 
-                                          verbose = False) -> int:
+                                          verbose = False) -> dict:
 
         """
         INPUTS:
@@ -231,8 +231,8 @@ class DbConnection():
         result = self.actuators_table.insert_data(actuator   = actuator_name,
                                                   start_time = start_time,
                                                   end_time   = end_time,
-                                                  time_on    = time_on,
-                                                  time_off   = time_off)
+                                                  time_on    = on_time,
+                                                  time_off   = off_time)
 
         return result
         
