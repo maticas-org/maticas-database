@@ -96,14 +96,15 @@ class ActuatorsWrapper():
             return input_check
 
         # statement for insertion of new data
-        insert_statement = insert(self.table).values(actuator_name   = actuator,
+        insert_statement = insert(self.table).values(time = datetime.utcnow(),
+                                                     actuator_name   = actuator,
                                                      start_time = start_time,
                                                      end_time   = end_time,
                                                      time_on    = time_on,
                                                      time_off   = time_off)
                                                     
         # statement for deletion of previous data
-        delete_statement = delete(self.table).where(self.table.c.actuator == actuator)
+        delete_statement = delete(self.table).where(self.table.c.actuator_name == actuator)
 
         with self.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
             connection.execute(delete_statement)
@@ -132,8 +133,8 @@ class ActuatorsWrapper():
             return {"status": -1, "message": "The actuator name is too long."}
 
         # checks if the actuator exists in the database
-        if check_existence_of_actuator(actuator):
-            return {"status": -1, "message": "The actuator already exists in the database."}
+        #if self.check_existence_of_actuator(actuator):
+        #    return {"status": -1, "message": "The actuator already exists in the database."}
 
         # converts the strings to datetime objects to be able to compare them
         try:
@@ -173,7 +174,7 @@ class ActuatorsWrapper():
                     - False,    if the actuator doesn't exist in the database.
         """
 
-        statement = select(self.table).where(self.table.c.actuator == actuator)
+        statement = select(self.table).where(self.table.c.actuator_name == actuator)
 
         # compiles the statement into a PosgresSQL query string.
         statement = statement.compile(dialect = postgresql.dialect())

@@ -50,8 +50,10 @@ class IntervalsWrapper():
             # Deletes the previous value of the variable if it exists.
             delete_statement = delete(self.table).where(self.table.c.variable == variable)
 
+
             # Inserts the value into the table.
-            insert_statement = insert(self.table).values(variable = variable,
+            insert_statement = insert(self.table).values(time = datetime.utcnow(),
+                                                         variable = variable,
                                                          min_acceptable = acceptable_interval[0],
                                                          max_acceptable = acceptable_interval[1],
                                                          min_optimal = optimal_interval[0],

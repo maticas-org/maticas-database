@@ -94,6 +94,28 @@ class UsersWrapper():
     #                     user data retrieval functions                      #
     #------------------------------------------------------------------------#
 
+    def get_user_id(self, username: str) -> dict:
+
+        # deletes white spaces on the sides of the strings
+        username = self.sanitize_username(username)
+
+        # checks if any field is invalid
+        result = self.validate_input(username, "default@gmail.com", "default1232090e1")
+
+        if result["status"] == -1:
+            return result
+
+        statement = select(self.table).where(self.table.c.username == username)
+        statement = statement.compile(dialect = postgresql.dialect())
+
+        result    = pd.read_sql(statement, self.engine)
+
+        if result.empty:
+            return {"status": -1, "message": "user not found."}
+        else:
+            return {"status": 0, "message": 'ok.', "id": result["id_"][0]}
+
+
 
     def auth_user_by_username(self, username: str, password: str) -> dict:
 
