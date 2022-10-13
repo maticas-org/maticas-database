@@ -122,9 +122,10 @@ class ConnectionsHandler():
     #------------------------------------------------------------------------#
 
     def get_user_id(self, username: str) -> dict:
+        return self.users_db_connection.get_user_id(username)
 
-        ans = self.users_db_connection.get_user_id(username)
-        return ans
+    def get_all_topics(self) -> dict:
+        return self.users_db_connection.get_all_topics()
 
 
     def get_mic_data_by_usr_and_mac(self, username: str, mac_address: str) -> dict:
@@ -176,7 +177,15 @@ class ConnectionsHandler():
     #------------------------------------------------------------------------#
     #                       Write user data on his/her database              #
     #------------------------------------------------------------------------#
-    def write_ambiental_data(self, value: float, varname: str, verbose = False) -> None:
+    def write_ambiental_data(self, username: str, mac_address: str, value: float, varname: str, verbose = False) -> None:
+
+        result = self.get_mic_data_by_usr_and_mac(username, mac_address)
+
+        if result["status"] == -1:
+            return result
+
+        usr_id = result["data"][0]["usr_id"]
+
         return self.databases[usr_id].write_data(value, varname, verbose)
 
 

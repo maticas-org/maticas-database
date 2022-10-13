@@ -4,6 +4,7 @@ from sqlalchemy.orm         import Session
 from sqlalchemy             import Table
 from sqlalchemy.dialects    import postgresql
 
+from datetime import datetime
 import pandas as pd
 
 
@@ -71,10 +72,11 @@ class AmbientalVariableWrapper():
 
         input_check = self.insert_data_watchdog(value, varname)
 
-        if input_check["stats"] == -1:
+        if input_check["status"] == -1:
             return input_check
 
-        statement = insert(self.table).values(varname = varname, 
+        statement = insert(self.table).values(time = datetime.utcnow(),
+                                              varname = varname, 
                                               value   = value)
 
         # compiles the statement into a PosgreSQL query string.
@@ -115,8 +117,9 @@ class AmbientalVariableWrapper():
         if len(varname) > 128:
             return {"status": -1, "message": "Varname must be less than 20 characters."}
 
-        if not check_if_varname_exists(varname):
-            return {"status": -1, "message": "Varname does not exist."}
+        # checks if the varname exists in the table, but is not used any longer.
+        #if not self.check_if_varname_exists(varname):
+        #    return {"status": -1, "message": "Varname does not exist."}
 
         return {"status": 0, "message": "Data is valid."}
 
@@ -133,8 +136,7 @@ class AmbientalVariableWrapper():
         # compiles the statement into a PosgreSQL query string.
         statement = statement.compile(dialect = postgresql.dialect())
 
-        with self.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
-            result = connection.execute(statement)
+        result = pd.read_sql(statement, self.engine)
 
         if result.empty:
             return False

@@ -44,7 +44,7 @@ class MicrocontrollersWrapper():
         return result
 
 
-    def read_data_by_usr_id_and_mac(self, usr_id: str, mac_address: str) -> pd.DataFrame:
+    def read_data_by_usr_id_and_mac(self, usr_id: str, mac_address: str) -> dict:
 
         """
             Reads of the selected actuator.
@@ -58,7 +58,12 @@ class MicrocontrollersWrapper():
 
         # returns a dataframe with the results
         result = pd.read_sql(statement, self.engine)
-        return result
+
+        if result.empty:
+            return {"status": -1, "message": "No microcontroler or user found"}
+        else:
+            return {"status": 0, "message": "Data found", "data": result.to_dict(orient = "records")}
+
 
 
     def insert_data(self, usr_id: str, name: str, mac_address: str):

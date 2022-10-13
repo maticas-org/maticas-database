@@ -37,8 +37,9 @@ class TopicsWrapper():
         statement = statement.compile(dialect = postgresql.dialect())
 
         # returns a dataframe with the results
-        result = pd.read_sql(statement, self.engine)
+        result = pd.read_sql(statement, self.engine).to_dict("list")
         return result
+
 
     def read_data_by_usr_id(self, usr_id: int) -> pd.DataFrame:
 
@@ -54,6 +55,7 @@ class TopicsWrapper():
         # returns a dataframe with the results
         result = pd.read_sql(statement, self.engine)
         return result
+
 
 
     def insert_data(self, usr_id: str, usr_name:str, mac_addresses: pd.DataFrame, topic: str):
@@ -98,6 +100,7 @@ class TopicsWrapper():
             connection.execute(insert_statement)
 
         return {"status": 0, "message": "Data inserted correctly"}
+
 
 
     #----------------------------------------------------------------------------#
@@ -226,7 +229,7 @@ class TopicsWrapper():
 
         
         # checks if the mac_address is in the mac_addresses dataframe
-        if (mac_addresses["mac_address"].eq(mac_address_from_topic)).any() == False:
+        if (mac_addresses["mac_address"].eq(mac_address_from_topic)).any() == True:
            return {"status": -1, "message": "mac_address is not correct."}
 
 

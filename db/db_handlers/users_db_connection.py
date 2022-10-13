@@ -160,14 +160,14 @@ class UsrDbConnection():
         """
 
         # query the user id
-        user_id = self.users_table.get_user_id(username = username)
+        user_id = self.get_user_id(username = username)
 
         # if the user id is not found, return the result from the query
         if user_id["status"] == -1:
             return user_id
 
         # if found, query the microcontroller data
-        result = self.mics_table.get_mic_data_by_usr_and_mac(usr_id = int(usr_id["message"]),
+        result = self.mics_table.read_data_by_usr_id_and_mac(usr_id = int(user_id["id"]),
                                                              mac_address = mac_address)
 
         return result
@@ -186,6 +186,11 @@ class UsrDbConnection():
         user_id = self.users_table.get_user_id(username = username)
 
         return user_id
+
+    def get_all_topics(self) -> dict:
+
+        result = self.topics_table.get_all_topics()
+        return result
 
     #------------------------------------------------------------------------#
     #                             Check credentials                          #

@@ -105,6 +105,7 @@ class DbConnection():
         """
 
         result = self.var_table.insert_data(varname = varname, value = value)
+        print(result)
 
         if verbose:
             print("Inserted data in table {0}, with exit code: {1}".format(table_name, result))
