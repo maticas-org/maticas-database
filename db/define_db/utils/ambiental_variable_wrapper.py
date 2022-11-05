@@ -29,6 +29,21 @@ class AmbientalVariableWrapper():
         self.table  = table
         self.engine = engine
 
+    def read_all_data(self) -> pd.DataFrame:
+
+        """
+            Reads all data from the table.
+        """
+
+        statement = select(self.table)
+
+        # compiles the statement into a PosgresSQL query string.
+        statement = statement.compile(dialect = postgresql.dialect())
+
+        # returns a dataframe with the results
+        result = pd.read_sql(statement, self.engine)
+        return result
+
 
     def read_data(self,
                   varname: str,

@@ -142,6 +142,15 @@ class DbConnection():
         return data
 
 
+    def read_all_data(self) -> dict:
+
+        data = self.var_table.read_all_data().to_dict()
+        data["time"] = self.convert2datetime( data["time"] )
+
+        return data
+
+
+
 
     ############################################################# 
     #--------------------------------------------------------------#
@@ -195,10 +204,33 @@ class DbConnection():
         """
 
         data = self.intervals_table.read_data(variable = variable).to_dict()
-
         data["time"] = self.convert2datetime( data["time"] ) 
 
         return data
+
+
+    def read_all_ambiental_variables_intervals(self) -> dict:
+
+        """
+        INPUTS:
+                None.
+
+        OUTPUT:
+                Returns a pandas dataframe with this shape: 
+                +-----------------------+-----------------+--------------------+---------------------+------------------+------------------+
+                |   time                |   variable      |   min_acceptable   |   max_acceptable    |   min_optimal    |   max_optimal    |
+                +-----------------------+-----------------+--------------------+---------------------+------------------+------------------+
+                |                       |                 |                    |                     |                  |                  |
+                | "YYYY/MM/DD %H:%M:%S" | "variable_name" |       number       |       number        |       number     |       number     |
+                +-----------------------+-----------------+--------------------+---------------------+------------------+------------------+
+        """
+
+        data = self.intervals_table.read_all_data().to_dict()
+        data["time"] = self.convert2datetime( data["time"] ) 
+
+        return data
+
+
 
     ############################################################# 
     #------------------------------------------------------------#
@@ -245,16 +277,45 @@ class DbConnection():
                     - actuator_name:    Name of the actuator for which the configuration will be read.
 
             OUTPUT:
-                    Returns a pandas dataframe with this shape:
-                    +-----------------------+-----------------+----------------+---------------+--------------+------------------+
-                    |   time                |   actuator      |   start_time   |   end_time    |   time_on    |   time_off       |
-                    |-----------------------+-----------------+----------------+---------------+--------------+------------------+
-                    |                       |                 |                |               |              |                  |
-                    | "YYYY/MM/DD %H:%M:%S" | "actuator_name" |   "%H:%M:%S"   |  "%H:%M:%S"   |    nminutos  |     nminutos     |
-                    +-----------------------+-----------------+----------------+---------------+--------------+------------------+
+                    Returns a dictiorary from a pandas dataframe with this shape:
+
+                    {
+                    'actuator_id':     {0: id_1 , ..., n: id_n},
+                    'time':            {0: time_1, ..., n: time_n},
+                    'actuator_name':   {0: name_1, ..., n: name_n},
+                    'start_time':      {0: start_time_1, ..., n: start_time_n},
+                    'end_time':        {0: end_time_1, ..., n: end_time_n},
+                    'time_on':         {0: time_on_1, ..., n: time_on_n},
+                    'time_off':        {0: time_off_1, ..., n: time_off_n}
+                    }
         """
 
         data = self.actuators_table.read_data(actuator = actuator_name).to_dict()
+        data["time"] = self.convert2datetime(data["time"])
+        data["start_time"] = self.convert2time(data["start_time"])
+        data["end_time"]   = self.convert2time(data["end_time"])
+
+        return data
+
+    def read_all_actuators_configuration(self) -> dict:
+
+        """
+            INPUT:          None
+            OUTPUT:
+                    Returns a dictiorary from a pandas dataframe with this shape:
+
+                    {
+                    'actuator_id':     {0: id_1 , ..., n: id_n},
+                    'time':            {0: time_1, ..., n: time_n},
+                    'actuator_name':   {0: name_1, ..., n: name_n},
+                    'start_time':      {0: start_time_1, ..., n: start_time_n},
+                    'end_time':        {0: end_time_1, ..., n: end_time_n},
+                    'time_on':         {0: time_on_1, ..., n: time_on_n},
+                    'time_off':        {0: time_off_1, ..., n: time_off_n}
+                    }
+        """
+
+        data = self.actuators_table.read_all_data().to_dict()
         data["time"] = self.convert2datetime(data["time"])
         data["start_time"] = self.convert2time(data["start_time"])
         data["end_time"]   = self.convert2time(data["end_time"])

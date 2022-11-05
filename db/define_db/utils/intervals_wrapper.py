@@ -68,6 +68,24 @@ class IntervalsWrapper():
             return 0
 
 
+    def read_all_data(self) -> pd.DataFrame:
+        """
+            Reads all data from the table.
+
+            INPUT:  None
+            OUTPUT: pandas dataframe with the data.
+        """
+
+        statement = select(self.table)
+
+        # compiles the statement into a PosgresSQL query string.
+        statement = statement.compile(dialect = postgresql.dialect())
+
+        # returns a dataframe with the results
+        result = pd.read_sql(statement, self.engine)
+        return result
+
+
     def read_data(self, variable: str) -> pd.DataFrame:
 
         """

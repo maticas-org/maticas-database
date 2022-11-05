@@ -132,6 +132,9 @@ class ConnectionsHandler():
         return self.users_db_connection.get_mic_data_by_usr_and_mac(username, mac_address)
 
 
+    # -------------------------------------- #
+    # read from ambiental variable table:    #
+    # -------------------------------------- #
     
     def read_ambient_data(self, username: str, api_key: str, varname: str, timestamp_start: str, timestamp_end: str) -> dict:
 
@@ -147,6 +150,24 @@ class ConnectionsHandler():
         return self.databases[usr_id["id"]].read_data(varname, timestamp_start, timestamp_end)
 
 
+    def read_all_ambient_data(self, username: str, api_key: str) -> dict:
+
+        check = self.users_db_connection.check_credentials(username, api_key)
+        if check["status"] == -1:
+            return check
+
+        usr_id = self.get_user_id(username)
+
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].read_all_data()
+
+
+    # ----------------------------- #
+    # read from intervals table:    #
+    # ----------------------------- #
+
     def read_ambiental_variable_interval(self, username: str, api_key: str, varname: str) -> dict:
 
         check = self.users_db_connection.check_credentials(username, api_key)
@@ -160,6 +181,24 @@ class ConnectionsHandler():
 
         return self.databases[usr_id["id"]].read_ambiental_variable_interval(varname)
 
+    def read_all_ambiental_variables_intervals(self, username: str, api_key: str) -> dict:
+
+        check = self.users_db_connection.check_credentials(username, api_key)
+        if check["status"] == -1:
+            return check
+
+        usr_id = self.get_user_id(username)
+
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].read_all_ambiental_variables_intervals()
+
+
+
+    # ----------------------------- #
+    # read from actuators table:    #
+    # ----------------------------- #
 
     def read_actuators_configuration(self, username: str, api_key: str, actuator_name: str) -> dict:
 
@@ -173,6 +212,21 @@ class ConnectionsHandler():
             return usr_id
 
         return self.databases[usr_id["id"]].read_actuators_configuration(actuator_name)
+
+
+    def read_all_actuators_configuration(self, username: str, api_key: str) -> dict:
+
+        check = self.users_db_connection.check_credentials(username, api_key)
+        if check["status"] == -1:
+            return check
+
+        usr_id = self.get_user_id(username)
+
+        if usr_id["status"] == -1:
+            return usr_id
+
+        return self.databases[usr_id["id"]].read_all_actuators_configuration()
+
 
     #------------------------------------------------------------------------#
     #                       Write user data on his/her database              #
