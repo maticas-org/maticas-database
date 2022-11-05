@@ -256,6 +256,8 @@ class DbConnection():
 
         data = self.actuators_table.read_data(actuator = actuator_name).to_dict()
         data["time"] = self.convert2datetime(data["time"])
+        data["start_time"] = self.convert2time(data["start_time"])
+        data["end_time"]   = self.convert2time(data["end_time"])
 
         return data
 
@@ -273,7 +275,6 @@ class DbConnection():
         print('Database found!')
 
 
-
     #---------------------------------------#
     #               utils
     #---------------------------------------#
@@ -286,6 +287,16 @@ class DbConnection():
         return time
         
 
+    def convert2time(self, time: dict):
+        """
+        INPUT:  Dictionary with the shape: {0: "datetime.time(x, x, x)"}
+        OUTPUT: Dictionary with the shape: {0: "HH:MM:SS"}
+        """
+
+        for key, value in time.items():
+            time[key] = value.strftime("%H:%M:%S")
+
+        return time
 
 
 

@@ -229,8 +229,8 @@ class TopicsWrapper():
 
         
         # checks if the mac_address is in the mac_addresses dataframe
-        if (mac_addresses["mac_address"].eq(mac_address_from_topic)).any() == True:
-           return {"status": -1, "message": "mac_address is not correct."}
+        if (mac_addresses["mac_address"].eq(mac_address_from_topic)).any() == False:
+           return {"status": -1, "message": "mac_address is not registered."}
 
 
         return {"status": 0, "message": "data is correct"}
