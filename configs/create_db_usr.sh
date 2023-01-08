@@ -8,9 +8,9 @@ create user dave with encrypted password '0000';
 grant create on schema public to dave;
 
 ALTER USER dave CREATEDB;
-
 create database maticas;
-grant all privileges on database maticas to dave;
 create database maticas_users;
+
+grant all privileges on database maticas to dave;
 
 
